@@ -1,0 +1,80 @@
+CREATE TABLE Products (
+
+  id int NOT NULL,
+  PRIMARY KEY (ID)
+  );
+
+CREATE TABLE Questions (
+  id int NOT NULL,
+  productID int,
+  body text NOT NULL,
+  date text NOT NULL,
+  asker_name text NOT NULL,
+  asker_email text NOT NULL,
+  reported bool NOT NULL,
+  helpfulness bool NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (productID) REFERENCES Products(id)
+);
+
+CREATE TABLE Answers (
+  id int NOT NULL,
+  questionID int,
+  body text NOT NULL,
+  date text NOT NULL,
+  answerer_name text NOT NULL,
+  answerer_email text NOT NULL,
+  reported bool NOT NULL,
+  helpfulness bool NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (questionID) REFERENCES Questions(id)
+);
+
+CREATE TABLE Photos (
+  id int NOT NULL,
+  answerID int,
+  url text NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (answerID) REFERENCES Answers(id)
+);
+
+
+CREATE TABLE testQuestions (
+  id int NOT NULL,
+  productID int,
+  body text NOT NULL,
+  date text NOT NULL,
+  asker_name text NOT NULL,
+  helpfulness bool NOT NULL,
+  reported bool NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE testPhotos (
+  id int NOT NULL,
+  answerID int,
+  url text NOT NULL,
+  PRIMARY KEY (id)
+);
+
+ETL
+
+SET foreign_key_checks = 0
+
+LOAD DATA LOCAL INFILE '/Users/pawpee/Downloads/questions.csv' INTO TABLE Questions
+FIELDS TERMINATED BY ',' ENCLOSED BY ""
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+;
+
+LOAD DATA LOCAL INFILE '/Users/pawpee/Downloads/answers.csv' INTO TABLE Answers
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+;
+
+LOAD DATA LOCAL INFILE '/Users/pawpee/Downloads/answers_photos.csv' INTO TABLE Photos
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+;
