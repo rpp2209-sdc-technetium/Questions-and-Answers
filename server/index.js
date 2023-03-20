@@ -2,18 +2,28 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
+const helpers = require('../db/index.js');
+
 app.get('/', (req, res) =>{
   res.send('hello world');
 });
 
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
-  res.send(req.params);
+  helpers.getQuestions(req.params.product_id)
+  .then((results)=>{
+    res.send(results);
+  });
+
+  //res.send(req.params);
 });
 
 app.get('/qa/questions/:question_id/answers', (req, res)=>{
 
-  res.send(req.params);
+  helpers.getAnswers(req.params.question_id)
+  .then((results)=>{
+    res.send(results);
+  });
 });
 
 app.post('/qa/questions',(req, res)=>{

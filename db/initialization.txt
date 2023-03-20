@@ -62,7 +62,7 @@ ETL
 SET foreign_key_checks = 0
 
 LOAD DATA LOCAL INFILE '/Users/pawpee/Downloads/questions.csv' INTO TABLE Questions
-FIELDS TERMINATED BY ',' ENCLOSED BY ""
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 ;
