@@ -45,6 +45,14 @@ db.getPhotos = (answerID)=>{
   });
 };
 
+
+
+
+
+
+
+
+
 var helpers = {};
 
 helpers.getQuestions = (productID)=>{
@@ -94,6 +102,20 @@ helpers.getQuestions = (productID)=>{
   });
 };
 
+helpers.addQuestion = (qInfo)=>{
+  return new Promise ((fulfill, reject)=>{
+    connection.query(
+      `INSERT INTO Questions (productID, body, date, asker_name, asker_email, reported, helpfulness) VALUES (${qInfo.product_id}, '${qInfo.body}', '${new Date().getTime().toString()}', '${qInfo.name}', '${qInfo.email}', 0, 0);`
+    , (err, results, fields)=>{
+      if (err) {
+        reject(err);
+      } else {
+        fulfill();
+      }
+    });
+  });
+};
+
 helpers.getAnswers = (questionID)=>{
 
   function AnswerObj (answer, photos){
@@ -136,6 +158,85 @@ helpers.getAnswers = (questionID)=>{
 
 
     });
+  });
+};
+
+helpers.addAnswer = (questionID, aInfo)=>{
+  return new Promise ((fulfill, reject)=>{
+    //first add the answers
+    connection.query(`INSERT INTO Answers (questionID, body, date, answerer_name, answerer_email, reported, helpfulness) VALUES (${questionID}, '${aInfo.body}','${new Date().getTime().toString()}','${aInfo.name}', '${aInfo.email}', 0, 0);`
+    , (err, results, fields)=>{
+      if (err) {
+        reject(err);
+      } else {
+        var loop = (x, callback)=>{
+          if (x >= aInfo['photos'].length) {
+            callback();
+          } else {
+            helpers.addPhoto(answerID, aInfo['photos'][x])
+            .then(()=>{
+              loop(x+1, callback);
+            });
+          }
+        };
+
+        //get the id of the answer we just added
+        db.getAnswers(questionID)
+        .then((data)=>{
+          answerID = data[data.length - 1].id
+          loop(0, ()=>{fulfill('sucess')});
+        });
+
+        //add the photos
+      }
+    });
+  });
+};
+
+helpers.addPhoto = (answerID, url) => {
+  return new Promise ((fulfill, reject)=>{
+    connection.query(`INSERT INTO photos (answerID, url) VALUES (${answerID}, '${url}');`
+    , (err, results, fields)=>{
+      if (err) {
+        reject(err);
+      } else {
+        fulfill();
+      }
+    });
+  });
+};
+
+helpers.feedback = (id,QorA, type)=>{
+  return new Promise ((fulfill, reject)=>{
+    if (type === 'reported') {
+      connection.query(`UPDATE ${QorA} SET reported = 1 WHERE id = ${id}`
+      , (err, results, fields)=>{
+        if (err) {
+          reject('database error', err);
+        } else {
+          fulfill();
+        }
+      });
+    } else {
+      //get the current helpfulness count
+      connection.query(`SELECT helpfulness FROM ${QorA} WHERE id = ${id}`
+      , (err, results, fields)=>{
+        if (err) {
+          reject(err);
+        } else {
+          var helpfulness = results[0].helpfulness;
+
+          connection.query(`UPDATE ${QorA} SET helpfulness = ${helpfulness + 1} WHERE id = ${id}`
+          , (err, results, fields)=>{
+            if (err) {
+              reject('database error', err);
+            } else {
+              fulfill();
+            }
+          });
+        }
+      });
+    }
   });
 };
 

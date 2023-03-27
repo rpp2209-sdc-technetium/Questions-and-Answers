@@ -5,16 +5,15 @@ CREATE TABLE Products (
   );
 
 CREATE TABLE Questions (
-  id int NOT NULL,
+  id int NOT NULL AUTO_INCREMENT,
   productID int,
   body text NOT NULL,
   date text NOT NULL,
   asker_name text NOT NULL,
   asker_email text NOT NULL,
   reported bool NOT NULL,
-  helpfulness bool NOT NULL,
-  PRIMARY KEY (id),
-  FOREIGN KEY (productID) REFERENCES Products(id)
+  helpfulness int NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE Answers (
@@ -25,7 +24,7 @@ CREATE TABLE Answers (
   answerer_name text NOT NULL,
   answerer_email text NOT NULL,
   reported bool NOT NULL,
-  helpfulness bool NOT NULL,
+  helpfulness int NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (questionID) REFERENCES Questions(id)
 );
@@ -38,24 +37,6 @@ CREATE TABLE Photos (
   FOREIGN KEY (answerID) REFERENCES Answers(id)
 );
 
-
-CREATE TABLE testQuestions (
-  id int NOT NULL,
-  productID int,
-  body text NOT NULL,
-  date text NOT NULL,
-  asker_name text NOT NULL,
-  helpfulness bool NOT NULL,
-  reported bool NOT NULL,
-  PRIMARY KEY (id)
-);
-
-CREATE TABLE testPhotos (
-  id int NOT NULL,
-  answerID int,
-  url text NOT NULL,
-  PRIMARY KEY (id)
-);
 
 ETL
 
