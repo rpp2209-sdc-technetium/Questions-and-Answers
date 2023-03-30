@@ -65,7 +65,7 @@ helpers.getQuestions = (productID)=>{
   function QuestionObj (question, answers){
     this.question_id = question.id;
     this.question_body = question.body;
-    this.question_date = new Date(parseInt(question.date)).toISOString();
+    this.question_date = question.date;
     this.asker_name = question.asker_name;
     this.question_helpfulness = question.helpfuless;
     this.reported = new Boolean(question.reported);
@@ -105,7 +105,7 @@ helpers.getQuestions = (productID)=>{
 helpers.addQuestion = (qInfo)=>{
   return new Promise ((fulfill, reject)=>{
     connection.query(
-      `INSERT INTO Questions (productID, body, date, asker_name, asker_email, reported, helpfulness) VALUES (${qInfo.product_id}, '${qInfo.body}', '${new Date().getTime().toString()}', '${qInfo.name}', '${qInfo.email}', 0, 0);`
+      `INSERT INTO Questions (productID, body, date, asker_name, asker_email, reported, helpfulness) VALUES (${qInfo.product_id}, '${qInfo.body}', '${new Date().toISOString()}', '${qInfo.name}', '${qInfo.email}', 0, 0);`
     , (err, results, fields)=>{
       if (err) {
         reject(err);
@@ -121,7 +121,7 @@ helpers.getAnswers = (questionID)=>{
   function AnswerObj (answer, photos){
     this.answer_id = answer.id;
     this.body = answer.body;
-    this.date = new Date(parseInt(answer.date)).toISOString();
+    this.date = answer.date;
     this.answerer_name = answer.answerer_name;
     this.helpfuless = answer.helpfulness;
     this.photos = [];
@@ -164,7 +164,7 @@ helpers.getAnswers = (questionID)=>{
 helpers.addAnswer = (questionID, aInfo)=>{
   return new Promise ((fulfill, reject)=>{
     //first add the answers
-    connection.query(`INSERT INTO Answers (questionID, body, date, answerer_name, answerer_email, reported, helpfulness) VALUES (${questionID}, '${aInfo.body}','${new Date().getTime().toString()}','${aInfo.name}', '${aInfo.email}', 0, 0);`
+    connection.query(`INSERT INTO Answers (questionID, body, date, answerer_name, answerer_email, reported, helpfulness) VALUES (${questionID}, '${aInfo.body}','${new Date().toISOString()}','${aInfo.name}', '${aInfo.email}', 0, 0);`
     , (err, results, fields)=>{
       if (err) {
         reject(err);
