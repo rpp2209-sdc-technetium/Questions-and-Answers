@@ -13,7 +13,7 @@ app.get('/', (req, res) =>{
 
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
-  helpers.getQuestions(req.params.product_id)
+  helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
   .then((results)=>{
     res.send(results);
   })

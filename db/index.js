@@ -55,7 +55,7 @@ db.getPhotos = (condition)=>{
 
 var helpers = {};
 
-helpers.getQuestions = (productID)=>{
+helpers.getQuestions = (productID, page, count)=>{
 
   var data = {
     product_id: productID,
@@ -85,7 +85,7 @@ helpers.getQuestions = (productID)=>{
 
       //loop through the questions
       var loop = (x, callback)=>{
-        if (x < questions.length) {
+        if (x < page * count && questions[x] !== undefined) {
           //get the answers for the current question
           helpers.getAnswers(questions[x].id)
           .then((answers)=>{
@@ -97,7 +97,7 @@ helpers.getQuestions = (productID)=>{
         }
       };
 
-      loop(0, ()=>{fulfill(data);});
+      loop((page * count) - count, ()=>{fulfill(data);});
     });
   });
 };
@@ -170,7 +170,6 @@ helpers.getAnswers = (questionID)=>{
           for (var x= 0; x < data.results.length; x++) {
             if (photosObj[data.results[x].answer_id] !== undefined) {
               data.results[x].photos = photosObj[data.results[x].answer_id];
-              console.log(data.results[x].photos);
             }
           }
 

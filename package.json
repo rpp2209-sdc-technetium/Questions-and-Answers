@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --watch --coverage",
     "server": "node server/server.js",
-    "loadTest": "k6 run script.js"
+    "loadTest": "k6 run k6Tests/script.js"
   },
   "repository": {
     "type": "git",
