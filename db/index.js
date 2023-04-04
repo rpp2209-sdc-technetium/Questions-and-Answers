@@ -1,7 +1,8 @@
 const mysql = require('mysql2');
+require('dotenv').config();
 
 const connection = mysql.createConnection({
-  host: '127.0.0.1',
+  host: process.env.DBURL,
   user: 'root',
   database: 'qna_service'
 });
