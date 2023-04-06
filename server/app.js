@@ -1,34 +1,55 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const Cache =  require('./cache.js');
 
 const helpers = require('../db/index.js');
 
 
 app.use(bodyParser.json());
 
+var AnswerCache = new Cache();
+var QuestionCache = new Cache();
+
 app.get('/', (req, res) =>{
   res.send('hello world');
 });
 
-var cache = {};
+
 
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
-  helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
+  var data = QuestionCache.find(req.params.product_id, req.params.page, req.params.count);
+
+  if (data) {
+    console.log('ran');
+    res.send(data);
+  } else {
+    helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
   .then((results)=>{
+    QuestionCache.add(req.params.product_id, req.params.page, req.params.count, results);
     res.send(results);
   })
+  }
 
   //res.send(req.params);
 });
 
 app.get('/qa/questions/:question_id/answers', (req, res)=>{
 
-  helpers.getAnswers(req.params.question_id)
+  var data = AnswerCache.find(req.params.product_id, req.params.page, req.params.count);
+
+  if (data) {
+    console.log('ran');
+    res.send(data);
+  } else {
+    helpers.getAnswers(req.params.question_id)
   .then((results)=>{
+    AnswerCache.add(req.params.product_id, 1, 1, results);
     res.send(results);
   });
+  }
+
 });
 
 app.post('/qa/questions',(req, res)=>{
