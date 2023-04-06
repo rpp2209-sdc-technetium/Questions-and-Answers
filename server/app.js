@@ -11,6 +11,8 @@ app.get('/', (req, res) =>{
   res.send('hello world');
 });
 
+var cache = {};
+
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
   helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
