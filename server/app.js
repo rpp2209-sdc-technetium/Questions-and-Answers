@@ -22,7 +22,6 @@ app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
   var data = QuestionCache.find(req.params.product_id, req.params.page, req.params.count);
 
   if (data) {
-    console.log('ran');
     res.send(data);
   } else {
     helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
@@ -40,7 +39,6 @@ app.get('/qa/questions/:question_id/answers', (req, res)=>{
   var data = AnswerCache.find(req.params.product_id, req.params.page, req.params.count);
 
   if (data) {
-    console.log('ran');
     res.send(data);
   } else {
     helpers.getAnswers(req.params.question_id)
