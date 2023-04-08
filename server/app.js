@@ -42,7 +42,7 @@ app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
 app.get('/qa/questions/:question_id/answers', (req, res)=>{
 
-  var data = AnswerCache.find(req.params.product_id, req.params.page, req.params.count);
+  var data = AnswerCache.find(req.params.product_id, 1, 1);
 
   if (data) {
     res.send(data);
