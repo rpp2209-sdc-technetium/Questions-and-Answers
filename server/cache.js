@@ -12,7 +12,9 @@ module.exports = function Cache () {
   };
   this.add = (id, page, count, data)=>{
     //delete the last cache
-    delete this.storage[Object.keys(this.storage).length - 1];
+    if (Object.keys(this.storage).length > 50) {
+      delete this.storage[Object.keys(this.storage)[0]];
+    }
     //add to cache
     this.storage[id] = {
       page: page,
