@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const Cache =  require('./cache.js');
+const path = require('node:path');
+require('dotenv').config();
 
 const helpers = require('../db/index.js');
 
@@ -15,7 +17,11 @@ app.get('/', (req, res) =>{
   res.send('hello world');
 });
 
-
+app.get(`/${process.env.LOADERIO}`, (req, res)=>{
+  if (process.env.LOADERIO !== '') {
+    res.sendFile(path.join(__dirname, `${process.env.LOADERIO}.txt`));
+  }
+});
 
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
