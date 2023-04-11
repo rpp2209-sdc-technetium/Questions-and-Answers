@@ -49,7 +49,7 @@ app.get('/qa/questions/:question_id/answers', (req, res)=>{
   } else {
     helpers.getAnswers(req.params.question_id)
   .then((results)=>{
-    AnswerCache.add(req.params.product_id, 1, 1, results);
+    AnswerCache.add(req.params.question_id, 1, 1, results);
     res.send(results);
   });
   }
