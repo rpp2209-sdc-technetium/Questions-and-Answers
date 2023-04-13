@@ -10,8 +10,8 @@ const helpers = require('../db/index.js');
 
 app.use(bodyParser.json());
 
-var AnswerCache = new Cache();
-var QuestionCache = new Cache();
+var AnswerCache = new Cache(200);
+var QuestionCache = new Cache(200);
 
 app.get('/', (req, res) =>{
   res.send('hello world');
