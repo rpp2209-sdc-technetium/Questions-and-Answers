@@ -28,20 +28,20 @@ describe('test getting server responses', ()=>{
 describe('cache', ()=>{
   var caches = new Cache(3);
   test('cache.add adds a new record to cache ', ()=>{
-    expect(caches.find(1, 1, 1)).toBe(false);
-    caches.add(1, 1, 1, {'hello': 'world'});
-    expect(caches.find(1, 1, 1)).toStrictEqual({'hello':'world'});
+    expect(caches.find(1)).toBe(false);
+    caches.add(1, {'hello': 'world'});
+    expect(caches.find(1)).toStrictEqual({'hello':'world'});
   });
   test('cache should keep the top 3 most looked up entries', ()=>{
-    caches.find(2, 2, 2);
-    caches.find(3, 3, 3);
-    caches.find(4, 4, 4);
-    caches.add(2, 2, 2, {'bob':'obo'});
-    caches.add(3, 3, 3, {'steve':'john'});
-    caches.add(4, 4, 4, {'motor':'cycle'});
-    caches.add(5, 5, 5, {'mouse':'cat'});
+    caches.find(2);
+    caches.find(3);
+    caches.find(4);
+    caches.add(2, {'bob':'obo'});
+    caches.add(3, {'steve':'john'});
+    caches.add(4, {'motor':'cycle'});
+    caches.add(5, {'mouse':'cat'});
 
-    expect(caches.find(5, 5, 5)).toBe(false);
+    expect(caches.find(5)).toBe(false);
 
 
 

@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const Cache =  require('./cache.js');
 const path = require('node:path');
 require('dotenv').config();
 
@@ -10,8 +9,7 @@ const helpers = require('../db/index.js');
 
 app.use(bodyParser.json());
 
-var AnswerCache = new Cache(200);
-var QuestionCache = new Cache(200);
+
 
 app.get('/', (req, res) =>{
   res.send('hello world');
@@ -25,35 +23,18 @@ app.get(`/${process.env.LOADERIO}`, (req, res)=>{
 
 app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
 
-  var data = QuestionCache.find(req.params.product_id, req.params.page, req.params.count);
-
-  if (data) {
-    res.send(data);
-  } else {
-    helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
+  helpers.getQuestions(req.params.product_id, req.params.page, req.params.count)
   .then((results)=>{
-    QuestionCache.add(req.params.product_id, req.params.page, req.params.count, results);
     res.send(results);
   })
-  }
-
-  //res.send(req.params);
 });
 
 app.get('/qa/questions/:question_id/answers', (req, res)=>{
 
-  var data = AnswerCache.find(req.params.question_id, 1, 1);
-
-  if (data) {
-    res.send(data);
-  } else {
-    helpers.getAnswers(req.params.question_id)
+  helpers.getAnswers(req.params.question_id)
   .then((results)=>{
-    AnswerCache.add(req.params.question_id, 1, 1, results);
     res.send(results);
   });
-  }
-
 });
 
 app.post('/qa/questions',(req, res)=>{

@@ -5,7 +5,7 @@ module.exports = function Cache (max = 100) {
   this.max = max;
 
 
-  this.find = (id, page, count)=>{
+  this.find = (id)=>{
     //add the lookup to the count object
     if (this.count[id] === undefined) {
       this.count[id] = 1;
@@ -15,17 +15,15 @@ module.exports = function Cache (max = 100) {
 
     if (this.storage[id] === undefined) {
       return false;
-    } else if (this.storage[id].page !== page || this.storage[id].count !== count){
-      return false;
     } else {
-      return (this.storage[id].data);
+      return (this.storage[id]);
     }
 
   };
 
 
 
-  this.add = (id, page, count, data)=>{
+  this.add = (id, data)=>{
 
 
 
@@ -40,16 +38,12 @@ module.exports = function Cache (max = 100) {
         this.least.count = this.count[id];
         //add current data to cache
         this.storage[id] = {
-          page: page,
-          count: count,
-          data:{...data}
+          ...data
         };
       }
     } else {
       this.storage[id] = {
-        page: page,
-        count: count,
-        data:{...data}
+        ...data
       };
       if (this.count[id] < this.least.count) {
         this.least.id = id;
