@@ -1,4 +1,6 @@
 const mysql = require('mysql2');
+const Cache =  require('./cache.js');
+
 require('dotenv').config();
 
 const connection = mysql.createConnection({
@@ -9,6 +11,9 @@ const connection = mysql.createConnection({
 
 
 var db = {};
+
+var AnswerCache = new Cache(200);
+var QuestionCache = new Cache(200);
 
 db.getQuestions = (productID)=>{
   return new Promise ((fulfill, reject)=>{
@@ -49,11 +54,6 @@ db.getPhotos = (condition)=>{
 
 
 
-
-
-
-
-
 var helpers = {};
 
 helpers.getQuestions = (productID, page, count)=>{
@@ -80,26 +80,43 @@ helpers.getQuestions = (productID, page, count)=>{
   };
 
   return new Promise((fulfill, reject)=>{
-    //get all the questions
-    db.getQuestions(productID)
-    .then((questions)=>{
 
-      //loop through the questions
-      var loop = (x, callback)=>{
-        if (x < page * count && questions[x] !== undefined) {
-          //get the answers for the current question
-          helpers.getAnswers(questions[x].id)
-          .then((answers)=>{
-            data.results.push(new QuestionObj(questions[x], answers));
-            loop(x + 1, callback);
-          });
-        } else {
-          callback();
-        }
-      };
+    //check if the product is cached
+    var cachedData = QuestionCache.find(productID);
+    if (cachedData) {
+      fulfill({
+        ...cachedData,
+         results: cachedData.results.slice((page * count) - count, (page * count))
+        });
+    } else {
+      //get all the questions
+      db.getQuestions(productID)
+      .then((questions)=>{
 
-      loop((page * count) - count, ()=>{fulfill(data);});
-    });
+        //loop through the questions
+        var loop = (x, callback)=>{
+          if (x < questions.length && questions[x] !== undefined) {
+            //get the answers for the current question
+            helpers.getAnswers(questions[x].id)
+            .then((answers)=>{
+              data.results.push(new QuestionObj(questions[x], answers));
+              loop(x + 1, callback);
+            });
+          } else {
+            callback();
+          }
+        };
+
+        loop(0, ()=>{
+          QuestionCache.add(productID, data);
+          fulfill({
+            ...data,
+             results: data.results.slice((page * count) - count, (page * count))
+            });
+        });
+      });
+    }
+
   });
 };
 
@@ -135,52 +152,62 @@ helpers.getAnswers = (questionID)=>{
       results: []
     };
 
-    //get the answers for the desired question
-    db.getAnswers(questionID)
-    .then((answers)=>{
+    var cachedData = AnswerCache.find(questionID);
 
-      if (answers.length > 0) {
-        //get the photos for each answer
-        //generate the query
-        var condition = ``;
+    if (cachedData) {
+      fulfill(cachedData);
+    } else {
+      //get the answers for the desired question
+      db.getAnswers(questionID)
+      .then((answers)=>{
 
-        //loop through the answers
-        for (var x = 0; x < answers.length; x++) {
-          data.results.push(new AnswerObj(answers[x]));
-          condition = condition.concat(`answerID = ${answers[x].id} || `);
-        }
-
-
-        //remove the last comma
-        condition = condition.slice(0, condition.length - 3);
-
-        //get all the photos for all the answers
-        db.getPhotos(condition)
-        .then((photos)=>{
-          //add the photos to their respective answer
-          photosObj = {};
-          for (var x = 0; x < photos.length; x++) {
-            if (photosObj[photos[x].answerID] === undefined) {
-              photosObj[photos[x].answerID] = [{id: photos[x].id, url: photos[x].url}];
-            } else {
-              photosObj[photos[x].answerID].push({id: photos[x].id, url: photos[x].url});
-            }
-          }
+        if (answers.length > 0) {
+          //get the photos for each answer
+          //generate the query
+          var condition = ``;
 
           //loop through the answers
-          for (var x= 0; x < data.results.length; x++) {
-            if (photosObj[data.results[x].answer_id] !== undefined) {
-              data.results[x].photos = photosObj[data.results[x].answer_id];
-            }
+          for (var x = 0; x < answers.length; x++) {
+            data.results.push(new AnswerObj(answers[x]));
+            condition = condition.concat(`answerID = ${answers[x].id} || `);
           }
 
-          fulfill(data);
-        });
-      } else {
-        fulfill(data);
-      }
 
-    });
+          //remove the last comma
+          condition = condition.slice(0, condition.length - 3);
+
+          //get all the photos for all the answers
+          db.getPhotos(condition)
+          .then((photos)=>{
+            //add the photos to their respective answer
+            photosObj = {};
+            for (var x = 0; x < photos.length; x++) {
+              if (photosObj[photos[x].answerID] === undefined) {
+                photosObj[photos[x].answerID] = [{id: photos[x].id, url: photos[x].url}];
+              } else {
+                photosObj[photos[x].answerID].push({id: photos[x].id, url: photos[x].url});
+              }
+            }
+
+            //loop through the answers
+            for (var x= 0; x < data.results.length; x++) {
+              if (photosObj[data.results[x].answer_id] !== undefined) {
+                data.results[x].photos = photosObj[data.results[x].answer_id];
+              }
+            }
+
+            AnswerCache.add(questionID, data);
+            fulfill(data);
+          });
+        } else {
+          AnswerCache.add(questionID, data);
+          fulfill(data);
+        }
+
+      });
+    }
+
+
   });
 };
 
