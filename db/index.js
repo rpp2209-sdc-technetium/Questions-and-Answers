@@ -22,9 +22,9 @@ db.getQuestions = (productID)=>{
   });
 };
 
-db.getAnswers = (questionID)=>{
+db.getAnswers = (condition)=>{
   return new Promise ((fulfill, reject)=>{
-    connection.query(`SELECT * FROM answers WHERE questionID = "${questionID}"`, (err, results, fields)=>{
+    connection.query(`SELECT * FROM answers WHERE ${condition}`, (err, results, fields)=>{
       if (err) {
         reject(err);
       } else {
@@ -48,12 +48,6 @@ db.getPhotos = (condition)=>{
 
 
 
-
-
-
-
-
-
 var helpers = {};
 
 helpers.getQuestions = (productID)=>{
@@ -63,7 +57,7 @@ helpers.getQuestions = (productID)=>{
     results: []
   };
 
-  function QuestionObj (question, answers){
+  function QuestionObj (question){
     this.question_id = question.id;
     this.question_body = question.body;
     this.question_date = question.date;
@@ -72,11 +66,6 @@ helpers.getQuestions = (productID)=>{
     this.reported = new Boolean(question.reported);
     this.answers = {};
 
-    for (var x = 0; x < answers.results.length; x++) {
-      this.answers[answers.results[x].answer_id] = { id: answers.results[x].answer_id, ...answers.results[x]};
-      delete this.answers[answers.results[x].answer_id].answer_id;
-    }
-
   };
 
   return new Promise((fulfill, reject)=>{
@@ -84,21 +73,44 @@ helpers.getQuestions = (productID)=>{
     db.getQuestions(productID)
     .then((questions)=>{
 
-      //loop through the questions
-      var loop = (x, callback)=>{
-        if (x < questions.length && questions[x] !== undefined) {
-          //get the answers for the current question
-          helpers.getAnswers(questions[x].id)
-          .then((answers)=>{
-            data.results.push(new QuestionObj(questions[x], answers));
-            loop(x + 1, callback);
-          });
-        } else {
-          callback();
-        }
-      };
 
-      loop(0, ()=>{fulfill(data);});
+      //make our query to get all the answers for each of the questions we need
+      var condition = '';
+      for (var x = 0; x < questions.length; x++) {
+        data.results.push(new QuestionObj(questions[x]));
+        condition = condition.concat(`${questions[x].id} || questionID = `);
+      }
+      condition = condition.slice(0, condition.length - 16);
+
+
+      //get all the answers for every question
+      helpers.getAnswers(condition)
+      .then((answers)=>{
+
+        for (var x = 0; x < answers.results.length; x++) {
+
+          for (var i = 0; i < data.results.length; i++) {
+            if (answers.results[x].questionID === data.results[i].question_id) {
+              delete answers.results[x].questionID;
+              data.results[i].answers[answers.results[x].answer_id] = {id: answers.results[x].answer_id, ...answers.results[x]};
+
+              delete data.results[i].answers[answers.results[x].answer_id].answer_id;
+            }
+          }
+        }
+
+        fulfill(data);
+      });
+
+
+
+
+
+
+
+
+
+
     });
   });
 };
@@ -125,6 +137,7 @@ helpers.getAnswers = (questionID)=>{
     this.date = answer.date;
     this.answerer_name = answer.answerer_name;
     this.helpfuless = answer.helpfulness;
+    this.questionID = answer.questionID;
     this.photos = [];
   };
 
@@ -135,10 +148,10 @@ helpers.getAnswers = (questionID)=>{
       results: []
     };
 
-    //get the answers for the desired question
-    db.getAnswers(questionID)
-    .then((answers)=>{
 
+    //get the answers for the desired question(s)
+    db.getAnswers(`questionID = ${questionID}`)
+    .then((answers)=>{
       if (answers.length > 0) {
         //get the photos for each answer
         //generate the query
@@ -150,8 +163,7 @@ helpers.getAnswers = (questionID)=>{
           condition = condition.concat(`answerID = ${answers[x].id} || `);
         }
 
-
-        //remove the last comma
+        //remove the last OR
         condition = condition.slice(0, condition.length - 3);
 
         //get all the photos for all the answers
