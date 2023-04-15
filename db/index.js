@@ -73,8 +73,8 @@ helpers.getQuestions = (productID)=>{
     db.getQuestions(productID)
     .then((questions)=>{
 
-
-      //make our query to get all the answers for each of the questions we need
+      if (questions.length > 0) {
+        //make our query to get all the answers for each of the questions we need
       var condition = '';
       for (var x = 0; x < questions.length; x++) {
         data.results.push(new QuestionObj(questions[x]));
@@ -101,6 +101,10 @@ helpers.getQuestions = (productID)=>{
 
         fulfill(data);
       });
+      } else {
+        fulfill(data);
+      }
+
 
 
 
