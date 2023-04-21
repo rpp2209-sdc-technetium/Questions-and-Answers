@@ -65,57 +65,62 @@ helpers.getQuestions = (productID)=>{
     this.question_helpfulness = question.helpfuless;
     this.reported = new Boolean(question.reported);
     this.answers = {};
+  };
 
+  function AnswerObj (answer){
+    this.id = answer.aID;
+    this.body = answer.abody;
+    this.date = answer.adate;
+    this.answerer_name = answer.answerer_name;
+    this.helpfuless = answer.ahelpfulness;
+    this.photos = [];
   };
 
   return new Promise((fulfill, reject)=>{
     //get all the questions
-    db.getQuestions(productID)
-    .then((questions)=>{
+    var columns = `
+    questions.id, questions.body, questions.date, questions.asker_name, questions.reported, questions.helpfulness,
+    answers.id AS aID, answers.body AS abody, answers.date AS adate, answers.answerer_name, answers.reported AS areported, answers.helpfulness AS ahelpfulness,
+    photos.id AS pID, photos.url`;
 
-      if (questions.length > 0) {
-        //make our query to get all the answers for each of the questions we need
-      var condition = '';
-      for (var x = 0; x < questions.length; x++) {
-        data.results.push(new QuestionObj(questions[x]));
-        condition = condition.concat(`${questions[x].id} || questionID = `);
-      }
-      condition = condition.slice(0, condition.length - 16);
+    connection.query(`
+    SELECT ${columns}
+     FROM (questions
+      LEFT JOIN answers ON answers.questionID = questions.id)
+      LEFT JOIN photos ON photos.answerID = answers.id
+      WHERE questions.productID = ${productID}`
+      ,(err, results, fields)=>{
+        if (err) {
+          reject(err);
+        } else {
+          var formatedQ = {};
 
+          for (var x = 0; x < results.length; x++) {
+            var currentQID = results[x].id;
+            var currentAID = results[x].aID;
 
-      //get all the answers for every question
-      helpers.getAnswers(condition)
-      .then((answers)=>{
+            if (formatedQ[currentQID] === undefined) {
+              formatedQ[currentQID] = new QuestionObj(results[x]);
+            }
+            if (currentAID !== null) {
+              if (formatedQ[currentQID].answers[currentAID] === undefined) {
+                formatedQ[currentQID].answers[currentAID] = new AnswerObj(results[x]);
+              }
+            }
 
-        for (var x = 0; x < answers.results.length; x++) {
-
-          for (var i = 0; i < data.results.length; i++) {
-            if (answers.results[x].questionID === data.results[i].question_id) {
-              delete answers.results[x].questionID;
-              data.results[i].answers[answers.results[x].answer_id] = {id: answers.results[x].answer_id, ...answers.results[x]};
-
-              delete data.results[i].answers[answers.results[x].answer_id].answer_id;
+            if (results[x].pID !== null) {
+              formatedQ[currentQID].answers[currentAID].photos.push({id: results[x].pID, url: results[x].url});
             }
           }
+
+          for (var key in formatedQ) {
+            data.results.push(formatedQ[key]);
+          }
+
+          console.log(results);
+          fulfill(data);
         }
-
-        fulfill(data);
       });
-      } else {
-        fulfill(data);
-      }
-
-
-
-
-
-
-
-
-
-
-
-    });
   });
 };
 
@@ -141,7 +146,6 @@ helpers.getAnswers = (questionID)=>{
     this.date = answer.date;
     this.answerer_name = answer.answerer_name;
     this.helpfuless = answer.helpfulness;
-    //this.questionID = answer.questionID;
     this.photos = [];
   };
 
@@ -152,7 +156,7 @@ helpers.getAnswers = (questionID)=>{
       results: []
     };
 
-    var columns = 'answers.id, answers.body, answers.date, answers.answerer_name, answers.answerer_email, answers.reported, answers.helpfulness, photos.id AS photoID, photos.url';
+    var columns = 'answers.id, answers.body, answers.date, answers.answerer_name, answers.reported, answers.helpfulness, photos.id AS photoID, photos.url';
 
     connection.query(`SELECT ${columns} FROM answers LEFT JOIN photos ON answers.id = photos.answerID WHERE answers.questionID = ${questionID};`,
     (err, results, fields)=>{

@@ -28,12 +28,14 @@ app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
   var data = QuestionCache.find(req.params.product_id);
 
   if (data) {
-    res.send({...data, results: data.results.slice((req.params.page * req.params.count) - req.params.count, (req.params.page * req.params.count)) });
+    res.send(data);
+    //res.send({...data, results: data.results.slice((req.params.page * req.params.count) - req.params.count, (req.params.page * req.params.count)) });
   } else {
     helpers.getQuestions(req.params.product_id)
   .then((data)=>{
     QuestionCache.add(req.params.product_id, data);
-    res.send({...data, results: data.results.slice((req.params.page * req.params.count) - req.params.count, (req.params.page * req.params.count)) });
+    res.send(data);
+    //res.send({...data, results: data.results.slice((req.params.page * req.params.count) - req.params.count, (req.params.page * req.params.count)) });
 
   })
   }
