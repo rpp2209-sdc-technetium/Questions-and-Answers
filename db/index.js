@@ -141,7 +141,7 @@ helpers.getAnswers = (questionID)=>{
     this.date = answer.date;
     this.answerer_name = answer.answerer_name;
     this.helpfuless = answer.helpfulness;
-    this.questionID = answer.questionID;
+    //this.questionID = answer.questionID;
     this.photos = [];
   };
 
@@ -152,50 +152,37 @@ helpers.getAnswers = (questionID)=>{
       results: []
     };
 
+    var columns = 'answers.id, answers.body, answers.date, answers.answerer_name, answers.answerer_email, answers.reported, answers.helpfulness, photos.id AS photoID, photos.url';
 
-    //get the answers for the desired question(s)
-    db.getAnswers(`questionID = ${questionID}`)
-    .then((answers)=>{
-      if (answers.length > 0) {
-        //get the photos for each answer
-        //generate the query
-        var condition = ``;
+    connection.query(`SELECT ${columns} FROM answers LEFT JOIN photos ON answers.id = photos.answerID WHERE answers.questionID = ${questionID};`,
+    (err, results, fields)=>{
+      if (err) {
+        reject(err);
+      } else {
 
-        //loop through the answers
-        for (var x = 0; x < answers.length; x++) {
-          data.results.push(new AnswerObj(answers[x]));
-          condition = condition.concat(`answerID = ${answers[x].id} || `);
+        var answers = {};
+
+        console.log(results);
+
+        //format all our answers
+        //loop through the results
+        for (var x = 0; x < results.length; x++) {
+          var currentID = results[x].id;
+          if (answers[currentID] === undefined) {
+            answers[currentID] = new AnswerObj(results[x]);
+          }
+          if (results[x].url !== null) {
+            answers[currentID].photos.push({id: results[x].photoID, url:results[x].url});
+          }
         }
 
-        //remove the last OR
-        condition = condition.slice(0, condition.length - 3);
+        //loop through our answers object and add them to our data response
+        for (var key in answers) {
+          data.results.push(answers[key]);
+        }
 
-        //get all the photos for all the answers
-        db.getPhotos(condition)
-        .then((photos)=>{
-          //add the photos to their respective answer
-          photosObj = {};
-          for (var x = 0; x < photos.length; x++) {
-            if (photosObj[photos[x].answerID] === undefined) {
-              photosObj[photos[x].answerID] = [{id: photos[x].id, url: photos[x].url}];
-            } else {
-              photosObj[photos[x].answerID].push({id: photos[x].id, url: photos[x].url});
-            }
-          }
-
-          //loop through the answers
-          for (var x= 0; x < data.results.length; x++) {
-            if (photosObj[data.results[x].answer_id] !== undefined) {
-              data.results[x].photos = photosObj[data.results[x].answer_id];
-            }
-          }
-
-          fulfill(data);
-        });
-      } else {
         fulfill(data);
       }
-
     });
   });
 };
