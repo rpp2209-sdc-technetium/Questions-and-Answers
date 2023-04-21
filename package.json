@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watch --coverage",
-    "server": "node server/server.js",
+    "start": "node server/server.js",
     "loadTest": "k6 run k6Tests/script.js"
   },
   "repository": {
