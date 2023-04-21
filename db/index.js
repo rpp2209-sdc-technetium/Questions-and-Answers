@@ -117,7 +117,6 @@ helpers.getQuestions = (productID)=>{
             data.results.push(formatedQ[key]);
           }
 
-          console.log(results);
           fulfill(data);
         }
       });
@@ -166,7 +165,6 @@ helpers.getAnswers = (questionID)=>{
 
         var answers = {};
 
-        console.log(results);
 
         //format all our answers
         //loop through the results
