@@ -19,7 +19,7 @@ app.get('/', (req, res) =>{
 
 app.get(`/${process.env.LOADERIO}`, (req, res)=>{
   if (process.env.LOADERIO !== '') {
-    res.sendFile(path.join(__dirname, `${process.env.LOADERIO}.txt`));
+    res.send(process.env.LOADERIO);
   }
 });
 
