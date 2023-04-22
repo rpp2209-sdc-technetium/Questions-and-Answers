@@ -31,7 +31,7 @@ app.get(`/${process.env.LOADERIO}`, (req, res)=>{
 
 app.get('/qa/questions/:product_id/:page/:count',(req, res)=>{
 
-  client.get(req.params.product_id)
+  client.get(`${req.params.product_id}Q`)
   .then((data)=>{
     if (data !== null) {
       console.log('cached');
@@ -41,14 +41,10 @@ app.get('/qa/questions/:product_id/:page/:count',(req, res)=>{
       helpers.getQuestions(req.params.product_id)
       .then((data)=>{
         res.send(data);
-        client.set(req.params.product_id, JSON.stringify(data), {EX: 2});
+        client.set(`${req.params.product_id}Q`, JSON.stringify(data), {EX: 2});
       })
     }
   });
-
-
-
-  // var data = QuestionCache.find(req.params.product_id);
 
   // if (data) {
   //   res.send(data);
@@ -68,12 +64,24 @@ app.get('/qa/questions/:product_id/:page/:count',(req, res)=>{
 
 app.get('/qa/questions/:question_id/answers', (req, res)=>{
 
-
-  helpers.getAnswers(req.params.question_id)
+  client.get(`${req.params.question_id}A`)
   .then((data)=>{
-    AnswerCache.add(req.params.question_id, data);
-    res.send(data);
+    if (data !== null) {
+      console.log('cached');
+      res.send(JSON.parse(data));
+    } else {
+      console.log('not cached')
+      helpers.getAnswers(req.params.question_id)
+      .then((data)=>{
+        res.send(data);
+        client.set(`${req.params.question_id}A`, JSON.stringify(data), {EX: 2});
+
+      });
+    }
   });
+
+
+
 
   // var data = AnswerCache.find(req.params.question_id);
 
