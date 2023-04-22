@@ -5,13 +5,19 @@ const Cache =  require('./cache.js');
 const path = require('node:path');
 require('dotenv').config();
 
+const Redis = require('redis');
+const client = Redis.createClient();
+
+client.on('error', err => console.log('Redis Client Error', err));
+
+client.connect();
+
 const helpers = require('../db/index.js');
 
 
 app.use(bodyParser.json());
 
-var AnswerCache = new Cache(200);
-var QuestionCache = new Cache(200);
+
 
 app.get('/', (req, res) =>{
   res.send('hello world');
@@ -23,14 +29,24 @@ app.get(`/${process.env.LOADERIO}`, (req, res)=>{
   }
 });
 
-app.get('/qa/questions/:product_id/:page/:count', (req, res)=>{
+app.get('/qa/questions/:product_id/:page/:count',(req, res)=>{
 
-
-  helpers.getQuestions(req.params.product_id)
+  client.get(req.params.product_id)
   .then((data)=>{
-    res.send(data);
+    if (data !== null) {
+      console.log('cached');
+      res.send(JSON.parse(data));
+    } else {
+      console.log('not cached');
+      helpers.getQuestions(req.params.product_id)
+      .then((data)=>{
+        res.send(data);
+        client.set(req.params.product_id, JSON.stringify(data), {EX: 2});
+      })
+    }
+  });
 
-  })
+
 
   // var data = QuestionCache.find(req.params.product_id);
 
